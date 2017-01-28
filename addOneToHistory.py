@@ -116,7 +116,7 @@ def addMovie(itemType, imdb_tt_id, season, watchedUtcDatetime):
     exit(1) 
   try:
     parsed_json = json.loads(response_body)
-  except ValueError, e:   
+  except Exception:
     print(color.RED + "Invalid data received:" + color.END)  
     print(response_body)   
     exit(1)

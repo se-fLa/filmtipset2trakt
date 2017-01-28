@@ -172,7 +172,7 @@ def main(argv):
   # Parse response data
   try:
     parsed_json = json.loads(responseData)
-  except ValueError, e:
+  except Exception:
     print(color.RED + "Error. Invalid data received:" + color.END)
     print(responseData)
     exit(1)
