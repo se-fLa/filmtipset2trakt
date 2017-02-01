@@ -11,7 +11,7 @@ import sys
 
 #==============================================================================================
 # Create your application API keys from https://trakt.tv/oauth/applications below (the redirect URI can be anything)
-# Either fill in the 64 character Client ID and Client Secret below or leave 
+# Either fill in the 64 character Client ID and Client Secret below or leave
 # these variables empty ("") and the script will prompt for them on execution
 clientID     = ""
 clientSecret = ""
@@ -31,10 +31,10 @@ class color:
    UNDERLINE = '\033[4m'
    END = '\033[0m'
 
-headers = { 
+headers = {
   'Content-Type': 'application/json'
 }
-    
+
 #------------------------------------------------------------------------------------------
 
 def getDeviceCode(clientID):
@@ -46,7 +46,7 @@ def getDeviceCode(clientID):
         "client_id": "%(clientid)s"
     }
   """ % {
-    'clientid': clientID }  
+    'clientid': clientID }
 
   # Send request to get device code
   request_deviceCode = Request('https://api.trakt.tv/oauth/device/code', data=values, headers=headers)
@@ -60,15 +60,15 @@ def getDeviceCode(clientID):
       print(color.RED + "Unexpected HTTP return code: %i" % e.code + color.END)
       exit(1)
   except URLError as e:
-    print(color.RED + "ERROR\nURL request failed!" + color.END)  
-    print(e) 
+    print(color.RED + "ERROR\nURL request failed!" + color.END)
+    print(e)
     exit(1)
   except Exception:
-    print(color.RED + "ERROR\nUnexpected exception while requesting device code." + color.END)         
+    print(color.RED + "ERROR\nUnexpected exception while requesting device code." + color.END)
     exit(2)
-  
+
   # Parse the json response
-  response_body = response.read()                  
+  response_body = response.read()
   parsed_json = json.loads(response_body)
   deviceCode      = parsed_json["device_code"]
   userCode        = parsed_json["user_code"]
@@ -80,7 +80,7 @@ def getDeviceCode(clientID):
   print("\nVisit the URL below and approve the application API to use\nyour Trakt.tv account using this PIN code %s%s%s" % (color.BLUE, userCode, color.END))
   print(color.UNDERLINE+verificationUrl+color.END)
   return deviceCode, pollinterval
-  
+
 
 def getToken(deviceCode, clientID, clientSecret):
   """ Gets a token derived from device code, client ID and client secret.
@@ -91,7 +91,7 @@ def getToken(deviceCode, clientID, clientSecret):
 
 # Bugg reportted to Trakt.tv, client_secret is not needed:
 #      "client_secret": "%(clientsecret)s",
-#    'clientsecret': clientSecret }    
+#    'clientsecret': clientSecret }
   values = """
     {
       "code": "%(devicecode)s",
@@ -111,7 +111,7 @@ def getToken(deviceCode, clientID, clientSecret):
     print(color.RED + "ERROR\nURL request failed!" + color.END)
     print(e)
     exit(1)
-  except Exception:    
+  except Exception:
     print(color.RED + "ERROR\nUnexpected exception while requesting device token." + color.END)
     exit(2)
   else:
@@ -123,25 +123,25 @@ def getToken(deviceCode, clientID, clientSecret):
 def main(argv):
   global clientID
   global clientSecret
-  
+
   # Check authorization details
   if not clientID or not clientSecret:
     print(color.YELLOW + "Create your application API keys at https://trakt.tv/oauth/applications below (the redirect URI cam be anything)" + color.END)
   if not clientID:
-    clientID = raw_input("Enter your Trakt.tv API app Client ID    : ")  
+    clientID = raw_input("Enter your Trakt.tv API app Client ID    : ")
   if len(clientID) != 64:
     print(color.RED + "The client ID is invalid, should be 64 characters." + color.END)
-    exit(1)          
+    exit(1)
   if not clientSecret:
     clientSecret = raw_input("Enter your Trakt.tv API app Client Secret: ")
   if len(clientSecret) != 64:
     print(color.RED + "The client secret is invalid, should be 64 characters." + color.END)
     exit(1)
-    
+
   # Get device code
   code, pollint = getDeviceCode(clientID)
 
-  # Get access token 
+  # Get access token
   while True:
     responseCode, responseData = getToken(code, clientID, clientSecret)
     if responseCode == 200:
@@ -176,7 +176,7 @@ def main(argv):
     print(color.RED + "Error. Invalid data received:" + color.END)
     print(responseData)
     exit(1)
-    
+
   # Parse out the access token
   accessToken      = parsed_json["access_token"]
   #refreshToken     = parsed_json["refresh_token"]
