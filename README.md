@@ -45,20 +45,20 @@ This is how it will look when executing `getAuthorizationBearerAccessTokenCode.p
 ### Export data from Filmtipset
 1. Visit your personal page on [Filmtipset](http://www.filmtipset.se/yourpage.cgi), under the list of your latest rated movies there is a link "**Exportera denna lista**", click this link and a file will be downloaded to your computer containing all your seen and rated movies.
 1. Open up this file in Google Drive / Speadsheet or Microsoft Excel or similair tool that can handle csv data.
-1. Save the file as a "*tab separated file*" Filmtipset.tsv
-1. We now need to reformat data slightly. Run the following commands, you will need Linux or do it manually in Notepad.
+1. Save the file as a "*tab separated file*", for example with the name Filmtipset-windowsCR.tsv
+1. We now need to reformat data slightly before it can be processed and synced to Trakt. Run the commands listed below, you will need a Linux shell or do it manually in Notepad, for windows users you also have an option to install and use [Bash Shell](www.howtogeek.com/249966/how-to-install-and-use-the-linux-bash-shell-on-windows-10/). What we are doing is first using *tr* to translate windows newline characters to unix newlines and save this in a new file named Filmtipset-unix.tsv. If you are doing this manually this step is not needed. Then we use *awk* to parse out the imdb movie id together with it's seen date, respective with the rating and saving those in two new comma separated files Filmtipset_movies.csv and Filmtipset_ratings.csv, these are the files we will use for syncing.
 	```
-	tr -d '\r' < Filmtipset.tsv > Filmtipset_Alla_betyg.xls
-	awk -F"\t" '{print "tt" $7 "," $6}' Filmtipset.tsv > Filmtipset_movies.csv
-	awk -F"\t" '{print "tt" $7 "," $5 "," $6}' Filmtipset.tsv > Filmtipset_ratings.csv
+	tr -d '\r' < Filmtipset-windowsCR.tsv > Filmtipset-unix.tsv
+	awk -F"\t" '{print "tt" $7 "," $6}' Filmtipset-unix.tsv > Filmtipset_movies.csv
+	awk -F"\t" '{print "tt" $7 "," $5 "," $6}' Filmtipset-unix.tsv > Filmtipset_ratings.csv
 	```
-	The file with movies shall consist of the IMDB id and datetime separated with a comma. For example:
+	The file with movies shall consist of the IMDB id and datetime separated with a comma. Either create this file using above commands or do it manually. Verify the file looks like this example before continuing:
 	```
 	tt3062096,2016-12-11 22:33:57
 	tt3110958,2017-01-05 22:21:12
 	tt2404435,2016-12-27 18:59:11
 	```
-	The ratings file shall consist of IMDB id followed by the rating followed by the datetime, separated by commas. For example:
+	The ratings file shall consist of IMDB id followed by the rating followed by the datetime, separated by commas. All ratings will be doubled, e.g the script converts from rating scale 1-5 to 2-10. For example:
 	```
 	tt3062096,4,2016-12-11 22:33:57
 	tt3110958,4,2017-01-05 22:21:12

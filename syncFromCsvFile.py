@@ -12,12 +12,12 @@ import csv
 # How to import Filmtipset to Trakt.tv:
 # 1 Export your movies from www.filmtipset.se
 # 2 Open the xls in Google Drive / Spreadsheet
-# 3 Save as "tab separated file" .tsv
-# 4 tr -d '\r' < FilmtipsetFixad.tsv > FilmtipsetFixad_unix.tsv
-# 5a awk -F"\t" '{print "tt" $7 "," $6}' Filmtipset_20170109.tsv > Filmtipset_20170109_movies.csv
-# 5b awk -F"\t" '{print "tt" $7 "," $5 "," $6}' Filmtipset_20170109.tsv > Filmtipset_20170109_ratings.csv
+# 3 Save as "tab separated file" .tsv, name it something like Filmtipset-windowsCRr.tsv
+# 4 tr -d '\r' < Filmtipset-windowsCRr.tsv > Filmtipset-unix.tsv
+# 5a awk -F"\t" '{print "tt" $7 "," $6}' Filmtipset-unix.tsv > Filmtipset_movies.csv
+# 5b awk -F"\t" '{print "tt" $7 "," $5 "," $6}' Filmtipset-unix.tsv > Filmtipset_ratings.csv
 # NOTE: For rating to work it is recommended max synbc 200 movie ratings at a time, split your file like this:
-# split -a 1 -d -l 200 Filmtipset_20170109_ratings.csv Filmtipset_20170109_ratings_part_
+# split -a 1 -d -l 200 Filmtipset_ratings.csv Filmtipset_ratings_part_
 # and then sync them one by one and check numbers on your profile page in between.
 #
 
