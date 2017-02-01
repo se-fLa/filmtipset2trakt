@@ -5,6 +5,7 @@
 from urllib2 import Request, urlopen, URLError, HTTPError
 import json
 import sys
+import os
 
 # Fill in your API keys from https://trakt.tv/oauth/applications below (the redirect URI cam be anything)
 clientID           = ""
@@ -13,24 +14,49 @@ authorizationToken = ""
 
 #==============================================================================================
 
-class color:
-   PURPLE = '\033[95m'
-   CYAN = '\033[96m'
-   DARKCYAN = '\033[36m'
-   BLUE = '\033[94m'
-   GREEN = '\033[92m'
-   YELLOW = '\033[93m'
-   RED = '\033[91m'
-   BOLD = '\033[1m'
-   UNDERLINE = '\033[4m'
-   END = '\033[0m'
+def supports_color():
+    """
+    Returns True if the running system's terminal supports color, and False otherwise.
+    """
+    plat = sys.platform
+    supported_platform = plat != 'Pocket PC' and (plat != 'win32' or 'ANSICON' in os.environ)
+    # isatty is not always implemented, #6223.
+    is_a_tty = hasattr(sys.stdout, 'isatty') and sys.stdout.isatty()
+    if not supported_platform or not is_a_tty:
+        return False
+    return True
 
-headers = { 
+if supports_color():
+  class color:
+     PURPLE = '\033[95m'
+     CYAN = '\033[96m'
+     DARKCYAN = '\033[36m'
+     BLUE = '\033[94m'
+     GREEN = '\033[92m'
+     YELLOW = '\033[93m'
+     RED = '\033[91m'
+     BOLD = '\033[1m'
+     UNDERLINE = '\033[4m'
+     END = '\033[0m'
+else:
+  class color:
+     PURPLE = ''
+     CYAN = ''
+     DARKCYAN = ''
+     BLUE = ''
+     GREEN = ''
+     YELLOW = ''
+     RED = ''
+     BOLD = ''
+     UNDERLINE = ''
+     END = ''
+
+headers = {
   'Content-Type': 'application/json',
   'Authorization': 'Bearer %s' % authorizationToken,
   'trakt-api-version': '2',
   'trakt-api-key': '%s' % clientID
-} 
+}
 
 def printUsage():
   print("\nUsage: " + sys.argv[0] + " <type> <IMDb_ID[:season]> <datetime>")
@@ -45,7 +71,7 @@ def printUsage():
   print("\t\t" + sys.argv[0] + " episodes tt2057241 '2017-01-02 19:00:12'")
   print("\tAdd one season of a show")
   print("\t\t" + sys.argv[0] + " shows tt0369179:3 '2017-01-03 18:00'")
-  print("\tAdd all episodes of all seasons of a show")    
+  print("\tAdd all episodes of all seasons of a show")
   print("\t\t" + sys.argv[0] + " shows tt1628033 '2017-01-04 13:00Z'")
   print("")
 
@@ -91,16 +117,16 @@ def addMovie(itemType, imdb_tt_id, season, watchedUtcDatetime):
                  ]
              }
         ]
-     }  
+     }
      """ % {
       'type': itemType,
       'imdb': imdb_tt_id,
       'date': watchedUtcDatetime,
       'season': season }
 
-  request_syncHistory = Request('https://api.trakt.tv/sync/history', data=values, headers=headers) 
+  request_syncHistory = Request('https://api.trakt.tv/sync/history', data=values, headers=headers)
   try:
-    response_body = urlopen(request_syncHistory).read()  
+    response_body = urlopen(request_syncHistory).read()
   except HTTPError as e:
      if e.code == 401:
        print(color.RED + "Authorization failed - your credentials are invalid!\nMake sure the autorization token is still valid and check your client ID is correct." + color.END)
@@ -112,15 +138,15 @@ def addMovie(itemType, imdb_tt_id, season, watchedUtcDatetime):
        print(color.RED + "Unknown Error!!" + color.END)
        exit(1)
   except Exception:
-    print(color.RED + "ERROR\nUnexpected exception" + color.END)      
-    exit(1) 
+    print(color.RED + "ERROR\nUnexpected exception" + color.END)
+    exit(1)
   try:
     parsed_json = json.loads(response_body)
   except Exception:
-    print(color.RED + "Invalid data received:" + color.END)  
-    print(response_body)   
+    print(color.RED + "Invalid data received:" + color.END)
+    print(response_body)
     exit(1)
-  return parsed_json      
+  return parsed_json
 
 
 
@@ -134,9 +160,9 @@ watchedDatetime = sys.argv[3]
 season = ""
 if not itemType in ["movies", "shows", "episodes"]:
   print(color.RED + "Invalid type specified" + color.END)
-  exit(1)      
+  exit(1)
 if itemType == "shows" and ':' in movieIMDbId:
-  movieIMDbId, season = movieIMDbId.split(':')  
+  movieIMDbId, season = movieIMDbId.split(':')
 if len(movieIMDbId) != 9 or movieIMDbId[:2] != "tt":
   print(color.RED + "Invalid IMDb id" + color.END)
   exit(1)
@@ -155,7 +181,7 @@ if addedMovies != 0:
 addedEpisodes = jsonResponse["added"]["episodes"]
 if addedEpisodes != 0:
   print(color.GREEN + "Added %s episodes" % addedEpisodes + color.END)
-  
+
 notFoundMovies = jsonResponse["not_found"]["movies"]
 if notFoundMovies:
   print(color.RED + "Following movies was not found and could not be added:")
@@ -167,7 +193,7 @@ notFoundShows = jsonResponse["not_found"]["shows"]
 if notFoundShows:
   print(color.RED + "Following shows was not found and could not be added:")
   for show in notFoundShows:
-    print(show["ids"]["imdb"])   
+    print(show["ids"]["imdb"])
   print(color.END)
 
 notFoundSeasons = jsonResponse["not_found"]["seasons"]

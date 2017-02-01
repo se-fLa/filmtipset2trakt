@@ -7,6 +7,7 @@ import json
 import sys
 import os.path
 import csv
+import os
 
 #
 # How to import Filmtipset to Trakt.tv:
@@ -32,17 +33,43 @@ authorizationToken = ""
 #==============================================================================================
 
 
-class color:
-   PURPLE = '\033[95m'
-   CYAN = '\033[96m'
-   DARKCYAN = '\033[36m'
-   BLUE = '\033[94m'
-   GREEN = '\033[92m'
-   YELLOW = '\033[93m'
-   RED = '\033[91m'
-   BOLD = '\033[1m'
-   UNDERLINE = '\033[4m'
-   END = '\033[0m'
+def supports_color():
+    """
+    Returns True if the running system's terminal supports color, and False otherwise.
+    """
+    plat = sys.platform
+    supported_platform = plat != 'Pocket PC' and (plat != 'win32' or 'ANSICON' in os.environ)
+    # isatty is not always implemented, #6223.
+    is_a_tty = hasattr(sys.stdout, 'isatty') and sys.stdout.isatty()
+    if not supported_platform or not is_a_tty:
+        return False
+    return True
+
+if supports_color():
+  class color:
+     PURPLE = '\033[95m'
+     CYAN = '\033[96m'
+     DARKCYAN = '\033[36m'
+     BLUE = '\033[94m'
+     GREEN = '\033[92m'
+     YELLOW = '\033[93m'
+     RED = '\033[91m'
+     BOLD = '\033[1m'
+     UNDERLINE = '\033[4m'
+     END = '\033[0m'
+else:
+  class color:
+     PURPLE = ''
+     CYAN = ''
+     DARKCYAN = ''
+     BLUE = ''
+     GREEN = ''
+     YELLOW = ''
+     RED = ''
+     BOLD = ''
+     UNDERLINE = ''
+     END = ''
+
 
 def printUsage():
   print("\nUsage: " + sys.argv[0] + " <add | removemovies | rate | rateremove> <csvFile>")
