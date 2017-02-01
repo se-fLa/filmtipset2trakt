@@ -4,7 +4,8 @@
 With these tools you can migrate all your watched movies and movie ratings from [Filmtipset](http://www.filmtipset.se) to [Trakt](http://trakt.tv)
 
 ## How to
-Follow these instructions to migrate your data from Filmtipset.se to Trakt.tv, it requires python. Not tested on windows.
+Follow these instructions to migrate your data from Filmtipset.se to Trakt.tv.
+Both Windows and Linux is supported. It requires Python 2, not compatible with Python 3.
 
 ### Get needed API key - this only need to be done once
 First you need to get an authorization key to be able to import data to Trakt, to do this create an "API App" on trakt.tv
@@ -131,3 +132,4 @@ Examples:
 * Add parsing of data into the script so it is not necessary to awk the data before sync.
 * Automatically split rating in chunks of 200 to avoid trakt.tv failures.
 * Automatic save the authorization bearer from getAuthorizationBearerAccessTokenCode.py in a config file and read this file from other scripts to avoid user having to edit scripts.
+* Make it compatible with Python2 and Python3.
