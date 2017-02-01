@@ -8,7 +8,7 @@ import sys
 import os.path
 import csv
 
-# 
+#
 # How to import Filmtipset to Trakt.tv:
 # 1 Export your movies from www.filmtipset.se
 # 2 Open the xls in Google Drive / Spreadsheet
@@ -48,7 +48,7 @@ def printUsage():
   print("\nUsage: " + sys.argv[0] + " <add | removemovies | rate | rateremove> <csvFile>")
   print("  add              Add the movies listed in csvFile")
   print("  removemovies     Remove the movies listed in csvFile")
-  print("  rate             Rate the movies listed in csvFile")    
+  print("  rate             Rate the movies listed in csvFile. The rating will be duplicated, e.g. 1-5 becomes 2-10.")
   print("  rateremove       Remove the rating for the movies listed in csvFile")
   print("  csvFile          A comma separated file with IMDb ID (tt0000000) or rate and date.")
   print("\nExamples:")
@@ -63,7 +63,7 @@ if len(sys.argv) != 3:
 
 
 #------------------------------------------------------------------------------------------
- 
+
 def syncFromCsvFile(operation, filePath):
   csvFile = open(filePath, 'r')
   if operation == "add" or operation == "removemovies":
@@ -72,21 +72,21 @@ def syncFromCsvFile(operation, filePath):
     #Now we have: {'at': '2006-02-04 12:35:36', 'imdb': 'tt117571'}
   elif operation == "rate" or operation == "rateremove":
     fieldnames = ("imdb","rating","at")
-    reader = csv.DictReader( csvFile, fieldnames)        
+    reader = csv.DictReader( csvFile, fieldnames)
   else:
     print("INTERNAL ERROR, unsupported operation " + operation)
     exit(2)
-  
+
   # Create json structure
   jsonValues = { "movies" : [] }
-  for row in reader:     
+  for row in reader:
     # Padd zero to IMDb IDs needing it
     if len(row["imdb"]) != 9:
-      row["imdb"] = "tt%s" % row["imdb"][2:].rjust(7, '0')                    
+      row["imdb"] = "tt%s" % row["imdb"][2:].rjust(7, '0')
     if operation == "add" or operation == "removemovies":
       movie = { "watched_at": row["at"], "ids": { "imdb": row["imdb"] } }
     elif operation == "rate":
-      # make the rating a number and also change from 1-5 to 1-10
+      # make the rating a number and also change from 1-5 to 2-10
       rating = int(row["rating"]) * 2
       movie = { "rated_at": row["at"], "rating": rating, "ids": { "imdb": row["imdb"] } }
     elif operation == "rateremove":
@@ -96,22 +96,22 @@ def syncFromCsvFile(operation, filePath):
   #exit(1)
 
   # The clienID and authorizationToken, might have changed so must do it here.
-  headers = { 
+  headers = {
    'Content-Type': 'application/json',
    'Authorization': 'Bearer %s' % authorizationToken,
    'trakt-api-version': '2',
    'trakt-api-key': '%s' % clientID
   }
-  
+
   values = json.dumps(jsonValues)
   if operation == "add":
-    request_syncHistory = Request('https://api.trakt.tv/sync/history', data=values, headers=headers) 
+    request_syncHistory = Request('https://api.trakt.tv/sync/history', data=values, headers=headers)
   elif operation == "removemovies":
-    request_syncHistory = Request('https://api.trakt.tv/sync/history/remove', data=values, headers=headers)    
+    request_syncHistory = Request('https://api.trakt.tv/sync/history/remove', data=values, headers=headers)
   elif operation == "rate":
     request_syncHistory = Request('https://api.trakt.tv/sync/ratings', data=values, headers=headers)
   elif operation == "rateremove":
-    request_syncHistory = Request('https://api.trakt.tv/sync/ratings/remove', data=values, headers=headers)        
+    request_syncHistory = Request('https://api.trakt.tv/sync/ratings/remove', data=values, headers=headers)
   else:
     print("ERROR - unsupported operation!")
     exit(2)
@@ -127,29 +127,29 @@ def syncFromCsvFile(operation, filePath):
        exit(1)
     elif e.code == 403:
        print(color.RED + "Invalid API credentials or unapproved app." + color.END)
-       exit(1)     
+       exit(1)
     elif e.code == 524:
        print(color.RED + "Trakt.tv server time-out and closed the connection. Your file is to big, but probably all is synced anyway. Wait 5-10 minutes and review your Trakt.tv profile." + color.END)
-       exit(1)                                  
+       exit(1)
     else:
        print(color.RED + "Unknown Error!! HTTP response code " + color.END)
        print(e)
        exit(1)
   except Exception:
-    print(color.RED + "ERROR\nUnexpected exception" + color.END)      
+    print(color.RED + "ERROR\nUnexpected exception" + color.END)
     print(sys.exc_info())
-    exit(1) 
+    exit(1)
 
   response_body = response.read()
   #TODO check response code 201 204
   try:
     parsed_json = json.loads(response_body)
   except Exception:
-    print(color.RED + "Invalid data received:" + color.END)  
-    print(response_body)   
+    print(color.RED + "Invalid data received:" + color.END)
+    print(response_body)
     exit(1)
   print(color.PURPLE + "Sync ended." + color.END)
-  return parsed_json      
+  return parsed_json
 
 
 
@@ -183,18 +183,18 @@ if not clientID:
   clientID = raw_input("Enter your Trakt.tv API app Client ID    : ")
   if len(clientID) != 64:
     print(color.RED + "The client ID is invalid, should be 64 characters." + color.END)
-    exit(1)          
+    exit(1)
 if not authorizationToken:
   print(color.YELLOW + "Get your API authorization bearer token from getAuthorizationBearerAccessTokenCode.py" + color.END)
   authorizationToken = raw_input("Enter your Trakt.tv API authorization bearer token: ")
   if len(authorizationToken) != 64:
     print(color.RED + "The authorization bearer token is invalid, should be 64 characters." + color.END)
     exit(1)
-                                        
+
 
 jsonResponse = syncFromCsvFile(operation, csvFile)
 #print json.dumps(jsonResponse, indent=3, separators=(',', ': '))
-  
+
 addedMovies = addedEpisodes = removedMovies = removedEpisodes = 0
 if operation == "add" or operation == "rate":
   addedMovies = jsonResponse["added"]["movies"]
@@ -210,8 +210,8 @@ elif operation == "removemovies" or operation == "rateremove":
     if operation == "removemovies":
       print(color.GREEN + "Deleted %s movies" % removedMovies + color.END)
     elif operation == "rateremove":
-     print(color.GREEN + "Removed rating for %s movies" % removedMovies + color.END)     
-          
+     print(color.GREEN + "Removed rating for %s movies" % removedMovies + color.END)
+
   removedEpisodes = jsonResponse["deleted"]["episodes"]
   if removedEpisodes != 0:
     if operation == "removemovies":
@@ -220,8 +220,8 @@ elif operation == "removemovies" or operation == "rateremove":
       print(color.GREEN + "Removed rating for %s episodes" % removedEpisodes + color.END)
 else:
   print("INTERNAL ERROR, unsupported operation " + operation)
-  exit(2)                    
-  
+  exit(2)
+
 notFoundMovies = jsonResponse["not_found"]["movies"]
 if notFoundMovies:
   print(color.RED + "Following movies was not found and could not be synced:")
@@ -233,7 +233,7 @@ notFoundShows = jsonResponse["not_found"]["shows"]
 if notFoundShows:
   print(color.RED + "Following shows was not found and could not be synced:")
   for show in notFoundShows:
-    print(show["ids"]["imdb"])   
+    print(show["ids"]["imdb"])
   print(color.END)
 
 notFoundSeasons = jsonResponse["not_found"]["seasons"]
@@ -261,6 +261,6 @@ if addedMovies == addedEpisodes == removedMovies == removedEpisodes == 0:
   print(color.YELLOW + "No changes executed." + color.END)
 else:
   print(color.YELLOW + "The above number may be inaccurate due a fault in Trakt.tv API!\nCheck your Trakt.tv profile, but note that it may take several minutes\nbefore changes are reflected in your Trakt.tv profile view." + color.END)
-  
+
 print(color.CYAN + "Done, exiting." + color.END)
 exit(0)
